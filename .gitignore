@@ -1,0 +1,12 @@
+*.pyc
+.idea/
+venv/
+build/
+dist/
+*.egg-info/
+version.txt
+debug/
+*.DS_Store
+tickets
+.idea
+amfidont/_version.py

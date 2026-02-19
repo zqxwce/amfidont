@@ -1,0 +1,47 @@
+[project]
+name = "amfidont"
+description = "A simple utility for bypassing amfid signature verification"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+keywords = ["macos", "cli", "amfi", "amfidont", "entitlements", "codesign", "amfid"]
+authors = [
+    { name = "zqxwce", email = "yyyyyy6yyyyyy6@gmail.com" }
+]
+maintainers = [
+    { name = "zqxwce", email = "yyyyyy6yyyyyy6@gmail.com" }
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3 :: Only",
+]
+dynamic = ["dependencies", "version"]
+
+[project.urls]
+"Homepage" = "https://github.com/zqxwce/amfidont"
+"Bug Reports" = "https://github.com/zqxwce/amfidont/issues"
+
+[project.scripts]
+amfidont = "amfidont.__main__:cli"
+
+[tool.setuptools.packages.find]
+exclude = ["docs*", "tests*"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+version = {attr = "amfidont._version.__version__"}
+
+[tool.setuptools_scm]
+version_file = "amfidont/_version.py"
+
+[build-system]
+requires = ["setuptools>=43.0.0", "setuptools_scm>=8", "wheel"]
+build-backend = "setuptools.build_meta"
