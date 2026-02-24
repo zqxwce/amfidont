@@ -174,7 +174,6 @@ def bypass_loop(
 
     while True:
         process.Continue()
-        print('got to after continue')
         if process.state not in [
             lldb.eStateRunning,
             lldb.eStateStopped,
