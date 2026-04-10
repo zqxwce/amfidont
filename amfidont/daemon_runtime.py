@@ -8,6 +8,7 @@ def start_daemon(
     cdhashes: Optional[List[str]] = None,
     verbose: bool = False,
     allow_all: bool = False,
+    spoof_apple: bool = False,
 ) -> None:
     """
     Start amfidont in a detached background process.
@@ -16,12 +17,15 @@ def start_daemon(
     :param cdhashes: Optional cdhashes to pass to the child process.
     :param verbose: Enables verbose startup logging and forwards `--verbose` to child.
     :param allow_all: Forwards unconditional validation bypass mode to child.
+    :param spoof_apple: Forwards isApple spoofing mode to child.
     """
     child_args = [sys.executable, "-m", "amfidont"]
     if verbose:
         child_args.append("--verbose")
     if allow_all:
         child_args.append("--allow-all")
+    if spoof_apple:
+        child_args.append("--spoof-apple")
     for path in paths or []:
         child_args.extend(["--path", path])
     for cdhash in cdhashes or []:

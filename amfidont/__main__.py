@@ -46,6 +46,13 @@ def main(
             '--allow-all',
             help='allow all validations to pass'
         )] = False,
+    spoof_apple: Annotated[
+        bool,
+        typer.Option(
+            '-S',
+            '--spoof-apple',
+            help='patch isApple to return true for allowed binaries'
+        )] = False,
 ) -> None:
     """
     Run bypass mode by default when no subcommand is selected.
@@ -55,9 +62,10 @@ def main(
     :param cdhashes: Optional cdhashes to allow.
     :param verbose: Enables verbose runtime output.
     :param allow_all: Enables unconditional validation bypass for all binaries.
+    :param spoof_apple: Patches isApple to return true for allowed binaries.
     """
     if ctx.invoked_subcommand is None:
-        run_bypass(paths=paths, cdhashes=cdhashes, verbose=verbose, allow_all=allow_all)
+        run_bypass(paths=paths, cdhashes=cdhashes, verbose=verbose, allow_all=allow_all, spoof_apple=spoof_apple)
 
 
 @cli.command()
@@ -89,6 +97,13 @@ def daemon(
             '--allow-all',
             help='allow all validations to pass'
         )] = False,
+    spoof_apple: Annotated[
+        bool,
+        typer.Option(
+            '-S',
+            '--spoof-apple',
+            help='patch isApple to return true for allowed binaries'
+        )] = False,
 ) -> None:
     """
     Start amfidont in daemon mode.
@@ -97,8 +112,9 @@ def daemon(
     :param cdhashes: Optional cdhashes to allow.
     :param verbose: Enables verbose runtime output.
     :param allow_all: Enables unconditional validation bypass for all binaries.
+    :param spoof_apple: Patches isApple to return true for allowed binaries.
     """
-    start_daemon(paths=paths, cdhashes=cdhashes, verbose=verbose, allow_all=allow_all)
+    start_daemon(paths=paths, cdhashes=cdhashes, verbose=verbose, allow_all=allow_all, spoof_apple=spoof_apple)
 
 
 @cli.command("add-path")

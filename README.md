@@ -29,6 +29,7 @@ Options:
   --cdhash, -c TEXT    cdhash of executable to allow (can be specified multiple times, merged with ~/.amfidont/cdhashes)
   --verbose, -v        enable verbose output
   --allow-all          allow all validations to pass
+  --spoof-apple, -S    patch isApple to return true for allowed binaries
   --install-completion Install completion for the current shell.
   --show-completion    Show completion for the current shell, to copy it or customize the installation.
   --help               Show this message and exit.
@@ -61,7 +62,16 @@ Commands:
     sudo amfidont daemon --verbose
     ```
 
-4. Stop foreground mode with `Ctrl-C` (this detaches `amfidont` and leaves `amfid` running).
+4. (Optional) Spoof allowed binaries as Apple-signed:
+
+    ```shell
+    sudo amfidont --spoof-apple --verbose
+    ```
+
+    For example, this can be used to run self-signed `arm64e` binaries without
+    setting the `arm64e_preview_abi` boot argument.
+
+5. Stop foreground mode with `Ctrl-C` (this detaches `amfidont` and leaves `amfid` running).
 
 ## Inner implementation details
 
@@ -78,6 +88,15 @@ Commands:
   - validation state (`isValid`)
 - If the validator is invalid but the path/cdhash matches configured allow-rules,
   the return register is patched to success and execution continues.
+- When `--spoof-apple` is enabled, an additional breakpoint is set on:
+
+```none
+-[AMFIPathValidator_macos isApple]
+```
+
+  This patches `isApple` to return true for allowed binaries, making them appear
+  Apple-signed. For example, this allows running self-signed `arm64e` binaries
+  without the `arm64e_preview_abi` boot argument.
 - Persistent configuration is stored in:
   - `~/.amfidont/paths`
   - `~/.amfidont/cdhashes`
