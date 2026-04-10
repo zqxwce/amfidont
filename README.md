@@ -97,6 +97,7 @@ Commands:
   This patches `isApple` to return true for allowed binaries, making them appear
   Apple-signed. For example, this allows running self-signed `arm64e` binaries
   without the `arm64e_preview_abi` boot argument.
+
 - Persistent configuration is stored in:
   - `~/.amfidont/paths`
   - `~/.amfidont/cdhashes`

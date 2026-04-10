@@ -8,6 +8,7 @@ assignees: ''
 ---
 
 **Test environment**
+
 - Host OS version.
 - Target device model and iOS version.
 
@@ -16,6 +17,7 @@ A clear and concise description of what the bug is.
 
 **To Reproduce**
 Steps to reproduce the behavior:
+
 1. Go to '...'
 2. Click on '....'
 3. Scroll down to '....'
@@ -31,4 +33,5 @@ If applicable, add logs including backtraces for the given error that help expla
 Add any other context about the problem here.
 
 ## For community
+
 ⬇️  **Please click the 👍 reaction instead of leaving a `+1` or 👍  comment**
