@@ -80,6 +80,54 @@ def validate_hook(
             pprint(result)
 
 
+def is_apple_hook(
+    target: lldb.SBTarget,
+    thread: lldb.SBThread,
+    paths: Set[str],
+    cdhashes: Set[str],
+    verbose: bool = False,
+    allow_all: bool = False,
+) -> None:
+    """
+    Patch isApple to return true when the binary matches configured allow-rules.
+
+    :param target: LLDB target attached to `amfid`.
+    :param thread: The stopped thread at the isApple breakpoint.
+    :param paths: Allowed executable path prefixes.
+    :param cdhashes: Allowed cdhash values.
+    :param verbose: Enables additional runtime logging.
+    :param allow_all: Forces all isApple checks to return true regardless of path/cdhash.
+    """
+    ret_reg, self_reg = registers_for_target(target)
+
+    frame = thread.frames[0]
+    validator = frame.reg[self_reg].value
+
+    thread.StepOutOfFrame(frame)
+
+    ret = thread.frames[0].reg[ret_reg]
+    result = dump_validator(target, validator)
+
+    if allow_all:
+        if verbose:
+            print(f"isApple patched due to --allow-all: {result['path']}")
+        ret.SetValueFromCString("1")
+        return
+
+    if result["cdhash"] in cdhashes:
+        if verbose:
+            print(f"isApple patched due to cdhash {result['cdhash']}")
+        ret.SetValueFromCString("1")
+        return
+
+    for path in paths:
+        if result["path"].startswith(path):
+            if verbose:
+                print(f"isApple patched due to path {result['path']}")
+            ret.SetValueFromCString("1")
+            return
+
+
 def dump_validator(target: lldb.SBTarget, validator: str) -> Dict[str, Union[str, bool]]:
     """
     Read path/cdhash/validity fields from an `AMFIPathValidator` object.
@@ -147,6 +195,7 @@ def bypass_loop(
     cdhashes: Optional[List[str]] = None,
     verbose: bool = False,
     allow_all: bool = False,
+    spoof_apple: bool = False,
 ) -> None:
     """
     Main runtime loop that continues `amfid`, reloads config changes, and patches
@@ -158,6 +207,7 @@ def bypass_loop(
     :param cdhashes: Optional allowlisted cdhash values.
     :param verbose: Enables verbose runtime logging.
     :param allow_all: Forces all validations to pass regardless of config.
+    :param spoof_apple: Patches isApple to return true for allowed binaries.
     """
     cli_paths = set(paths or [])
     cli_cdhashes = set(cdhashes or [])
@@ -194,14 +244,25 @@ def bypass_loop(
 
         thread = get_stopped_thread(process, lldb.eStopReasonBreakpoint)
         if thread:
-            validate_hook(
-                target,
-                thread,
-                allowed_paths,
-                allowed_cdhashes,
-                verbose=verbose,
-                allow_all=allow_all,
-            )
+            func_name = thread.frames[0].GetFunctionName()
+            if spoof_apple and "isApple" in func_name:
+                is_apple_hook(
+                    target,
+                    thread,
+                    allowed_paths,
+                    allowed_cdhashes,
+                    verbose=verbose,
+                    allow_all=allow_all,
+                )
+            else:
+                validate_hook(
+                    target,
+                    thread,
+                    allowed_paths,
+                    allowed_cdhashes,
+                    verbose=verbose,
+                    allow_all=allow_all,
+                )
 
 
 def run_bypass(
@@ -209,6 +270,7 @@ def run_bypass(
     cdhashes: Optional[List[str]] = None,
     verbose: bool = False,
     allow_all: bool = False,
+    spoof_apple: bool = False,
 ) -> None:
     """
     Run the foreground bypass loop against `amfid`.
@@ -217,6 +279,7 @@ def run_bypass(
     :param cdhashes: Optional cdhashes supplied by CLI.
     :param verbose: Enables informative runtime logging.
     :param allow_all: Forces all validations to pass regardless of path/cdhash.
+    :param spoof_apple: Patches isApple to return true for allowed binaries.
     """
     debugger = lldb.SBDebugger.Create()
     debugger.SetAsync(False)
@@ -233,13 +296,16 @@ def run_bypass(
         print(f"Attached to {AMFID_PATH}")
 
     target.BreakpointCreateByName("-[AMFIPathValidator_macos validateWithError:]")
+    if spoof_apple:
+        target.BreakpointCreateByName("-[AMFIPathValidator_macos isApple]")
     if verbose:
-        print("Installed validateWithError breakpoint")
+        breakpoints = "validateWithError and isApple" if spoof_apple else "validateWithError"
+        print(f"Installed {breakpoints} breakpoints")
 
     try:
         thread = threading.Thread(
             target=bypass_loop,
-            args=(process, target, paths, cdhashes, verbose, allow_all),
+            args=(process, target, paths, cdhashes, verbose, allow_all, spoof_apple),
         )
         thread.daemon = True
         thread.start()
